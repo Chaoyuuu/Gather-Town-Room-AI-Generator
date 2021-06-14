@@ -17,9 +17,9 @@ Population = List[RoomMap]
 # Constants & Mapping
 W = 10
 H = 13
-P = 0.3
+P = 0.4
 M_P = 0.05
-WEIGHT_LIMIT = 15000
+WEIGHT_LIMIT = 20000
 P_SIZE = 63
 GEN_LIMIT = 200
 orientations = [
@@ -70,7 +70,7 @@ def get_size_mapitem() -> int:
     return len(id_to_mapitemname)-1
 
 
-def one_hot_to_id(one_hot: RoomCell) -> int:
+def id_from_onehot(one_hot: RoomCell) -> int:
     for i in range(get_size_mapitem()):
         if one_hot[i]:
             return i
@@ -95,16 +95,16 @@ def one_hot_mapitem(appear_prob: float) -> RoomCell:
     return arr
 
 
-def random_room_map(h: int, w: int, appear_prob: float) -> RoomMap:
+def room_map_random(h: int, w: int, appear_prob: float) -> RoomMap:
     return [[one_hot_mapitem(appear_prob) for _ in range(w)] for _ in range(h)]
 
 
-def empty_room_map(h: int, w: int) -> RoomMap:
+def room_map_empty(h: int, w: int) -> RoomMap:
     return [[one_hot_mapitem(0) for _ in range(w)] for _ in range(h)]
 
 
 def random_population(size: int, h: int = H, w: int = W, appear_prob: float = P) -> Population:
-    return [random_room_map(h, w, appear_prob) for _ in range(size)]
+    return [room_map_random(h, w, appear_prob) for _ in range(size)]
 
 
 def fitness(room_map: RoomMap) -> Tuple[int, int, int, float]:
@@ -214,5 +214,5 @@ if __name__ == '__main__':
     pprint(f"------------best population------------:\n")
     for h in range(H):
         for w in range(W):
-            print(id_to_mapitemname[one_hot_to_id(population[0][h][w])], end=" ")
+            print(id_to_mapitemname[id_from_onehot(population[0][h][w])], end=" ")
         print("")

@@ -37,8 +37,8 @@ def prepare():
 
 
 def from_jsonroom_to_roommap(json_room) -> RoomMap:
-    from GA.main_ga import mapitemname_to_id, empty_room_map, H, W
-    room_map = empty_room_map(H, W)
+    from GA.main_ga import mapitemname_to_id, room_map_empty, H, W
+    room_map = room_map_empty(H, W)
     for item in json_room:
         one_hot = [0] * 15
         one_hot[mapitemname_to_id[item["_name"]]] = 1
