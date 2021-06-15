@@ -1,13 +1,27 @@
 from typing import Tuple
-
-from GA.main_ga import RoomMap
+from GA.main_ga import RoomMap, RoomCell, id_from_onehot, H, W
 
 Value = int
 Weight = int
 
 
-def fitness(room_map: RoomMap, h: int, w: int) -> Tuple[Value, Weight]:
-    from GA.main_ga import W, H, is_types, one_hot_mapitem
+def is_types(room_cell: RoomCell, types) -> bool:
+    return id_from_onehot(room_cell) in types
+
+
+def fitness1(room_map: RoomMap) -> Tuple[int, int, int, float]:
+    value = 0
+    weight = 0
+    for h in range(H):
+        for w in range(W):
+            _value, _weight = heuristic(room_map, h, w)
+            value += _value
+            weight += _weight
+    return value, weight, abs(value - weight), value/weight
+
+
+def heuristic(room_map: RoomMap, h: int, w: int) -> Tuple[Value, Weight]:
+    from GA.main_ga import W, H, one_hot_mapitem
     # TODO: Remove heuristic about overlapping objects.
     value = 0
     weight = 0

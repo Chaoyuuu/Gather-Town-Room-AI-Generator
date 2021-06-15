@@ -1,4 +1,3 @@
-from pprint import pprint
 from GA.main_ga import RoomMap, Population
 from random import choices
 import requests
@@ -28,7 +27,7 @@ def workspace_population(size: int) -> Population:
 def prepare():
     url = "https://raw.githubusercontent.com/Chaoyuuu/Gather-Town-Datasets/master/datasets.json"
     json_rooms = requests.get(url).json()
-
+    global room_maps
     for m in range(TOTAL_MEMBERS):
         for i_json_room_from_m in range(EACH_ONE_DRAWN):
             room_map = from_jsonroom_to_roommap(json_rooms[m*EACH_ONE_DRAWN+i_json_room_from_m]["room"])
@@ -37,11 +36,11 @@ def prepare():
 
 
 def from_jsonroom_to_roommap(json_room) -> RoomMap:
-    from GA.main_ga import mapitemname_to_id, room_map_empty, H, W
+    from GA.main_ga import id_from_itemname, room_map_empty, H, W
     room_map = room_map_empty(H, W)
     for item in json_room:
         one_hot = [0] * 15
-        one_hot[mapitemname_to_id[item["_name"]]] = 1
+        one_hot[id_from_itemname[item["_name"]]] = 1
         one_hot.extend(orientation_to_tuple[item["orientation"]])
         # print(f"item_name={item['_name']}, one_hot={one_hot}")
         room_map[item["y"]][item["x"]] = one_hot
