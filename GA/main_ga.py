@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import partial
 from random import choice, choices, random, randint
 from typing import List, Tuple, ClassVar
@@ -280,5 +281,12 @@ if __name__ == '__main__':
 
     print(f"------------generation------------:\n{gens}")
     pprint(f"------------best population------------:\n")
-    # TODO: 將每次的結果 Population 加到輸出檔案結尾
     pretty_print(population[0])
+
+    with open('ga_store.txt', 'a') as f:
+        for room_map in population:
+            for h in range(H):
+                for w in range(W):
+                    f.write(itemname_from_id[id_from_onehot(room_map[h][w])])
+                f.write('\n')
+        f.write(f'----------{datetime.now().strftime("%d/%m/%Y %H:%M:%S")}----------\n')
