@@ -13,8 +13,8 @@ Population = List[RoomMap]
 # Constants (Common)
 W = 10
 H = 13
-P = 0.01
-M_P1 = 0.03
+P = 0.00
+M_P1 = 0.05
 M_P2 = 0.5
 POP_SIZE = 63
 GEN_LIMIT = 200
@@ -202,7 +202,7 @@ def mutation_y_shift(room_map: RoomMap, prob: float) -> None:
     offset = choice([-1, 0, 1])
     for h in range(H//4, H//4+H//2):
         for w in range(W):
-            if not is_types(room_map, [-1]):
+            if not is_types(room_map[h][w], [-1]):
                 room_map[h+offset][w] = room_map[h][w]
                 room_map[h][w] = one_hot_mapitem(0)
 
@@ -272,9 +272,10 @@ if __name__ == '__main__':
     pretty_print(population[0])
 
     with open('ga_store.txt', 'a') as f:
-        for room_map in population:
+        for room_map in population[:6]:
             for h in range(H):
                 for w in range(W):
                     f.write(itemname_from_id[id_from_onehot(room_map[h][w])])
                 f.write('\n')
-        f.write(f'----------{datetime.now().strftime("%d/%m/%Y %H:%M:%S")}----------\n')
+            f.write('---\n')
+        f.write(f'^^^-------{datetime.now().strftime("%d/%m/%Y %H:%M:%S")}-------^^^\n')
