@@ -14,7 +14,7 @@ Population = List[RoomMap]
 W = 10
 H = 13
 P = 0.01
-M_P1 = 0.01
+M_P1 = 0.03
 M_P2 = 0.5
 POP_SIZE = 63
 GEN_LIMIT = 200
@@ -199,24 +199,12 @@ def mutation_y_shift(room_map: RoomMap, prob: float) -> None:
     if random() >= prob:
         return
     # y-shift
-    top = H * 3 // 4 - 1
-    down = H // 4
-    for h in range(H // 4, H * 3 // 4):
+    offset = choice([-1, 0, 1])
+    for h in range(H//4, H//4+H//2):
         for w in range(W):
-            if not is_types(room_map[h][w], [-1]):
-                top = min(top, h)
-                down = max(down, h)
-    dice = randint(0, 1)
-    if dice == 0 and top > H // 4:  # Can move top
-        for h in range(H // 4, H * 3 // 4 - 1):
-            for w in range(W):
-                room_map[h][w] = room_map[h + 1][w]
-                room_map[h + 1][w] = one_hot_mapitem(0)
-    elif dice == 1 and down < H * 3 // 4 - 1:  # Can move down
-        for h in range(H // 4 + 1, H * 3 // 4):
-            for w in range(W):
-                room_map[h][w] = room_map[h - 1][w]
-                room_map[h - 1][w] = one_hot_mapitem(0)
+            if not is_types(room_map, [-1]):
+                room_map[h+offset][w] = room_map[h][w]
+                room_map[h][w] = one_hot_mapitem(0)
 
 
 def run_ga(
