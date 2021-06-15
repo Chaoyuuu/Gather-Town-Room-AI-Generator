@@ -13,16 +13,16 @@ Population = List[RoomMap]
 # Constants (Common)
 W = 10
 H = 13
-P = 0.00
+P = 0.4
 M_P1 = 0.05
-M_P2 = 0.5
-POP_SIZE = 63
-GEN_LIMIT = 200
+M_P2 = 0.1
+POP_SIZE = 60
+GEN_LIMIT = 30000
 # Constants (fitness1)
 WEIGHT_LIMIT = 20000
 # Constants (fitness2)
-SOME = 2
-GAN_BASELINE = 0.9
+SOME = 50
+GAN_BASELINE = 0.98
 
 # Mappings
 orientations = [
@@ -93,8 +93,11 @@ def one_hot_mapitem(appear_prob: float) -> RoomCell:
 
 def one_hot_by_id(id: int) -> RoomCell:
     arr = [0] * count_all_furniture()
-    arr[id] = 1
-    arr.extend(choice(orientations))
+    if id == -1:
+        arr.extend([0, 0])
+    else:
+        arr[id] = 1
+        arr.extend(choice(orientations))
     return arr
 
 
@@ -123,7 +126,6 @@ def construct_DISS() -> ClassVar[Discriminator]:
     print("Initializing GAN discriminator...")
     DISS = Discriminator()
     DISS.load_state_dict(torch.load("./fitness/save.pt"))
-    DISS.float()
     DISS.eval()
     return DISS
 
@@ -150,7 +152,7 @@ def crossover_xy_divide_2(a: RoomMap, b: RoomMap) -> Tuple[RoomMap, RoomMap]:
         raise ValueError("RoomMap should have the same (w, h)")
     new_a = a
     new_b = b
-    new_a[H // 2:], new_b[H // 2:] = new_b[H // 2:], new_a[H // 2:]
+    new_a[:H//2], new_b[:H//2] = new_b[:H//2], new_a[:H//2]
     for i in range(H):
         new_a[i][W // 2:], new_b[i][W // 2:] = new_b[i][W // 2:], new_a[i][W // 2:]
     return new_a, new_b
@@ -199,12 +201,15 @@ def mutation_y_shift(room_map: RoomMap, prob: float) -> None:
     if random() >= prob:
         return
     # y-shift
-    offset = choice([-1, 0, 1])
+    offset = choice([-1, 1])
     for h in range(H//4, H//4+H//2):
         for w in range(W):
             if not is_types(room_map[h][w], [-1]):
-                room_map[h+offset][w] = room_map[h][w]
-                room_map[h][w] = one_hot_mapitem(0)
+                arr = [0]*count_all_furniture()
+                arr[randint(0, count_all_furniture()-1)] = 1
+                arr.extend(choice(orientations))
+                room_map[h+offset][w] = arr
+                room_map[h][w] = one_hot_by_id(-1)
 
 
 def run_ga(
@@ -248,7 +253,7 @@ def run_ga(
     return population, i
 
 
-def some_pass_by_fitness(some:int, population: Population, fitness_func) -> bool:
+def some_pass_by_fitness(some: int, population: Population, fitness_func) -> bool:
     for i in range(some):
         if fitness_func(population[i]) < GAN_BASELINE:
             return False
