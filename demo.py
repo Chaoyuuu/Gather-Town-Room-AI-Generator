@@ -5,8 +5,8 @@ from vae_model import *
 
 app = Flask(__name__)
 
-@app.route('/vae', methods=['GET'])
-def inference():
+@app.route('/generator/vae', methods=['GET'])
+def getVAE():
     model = load_vae_model()
     z = torch.randn(1, 4)
     sample = model.decoder(z)

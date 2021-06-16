@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from object_dictionary import *
 
 
 class VAE(nn.Module):
@@ -39,29 +40,12 @@ class VAE(nn.Module):
 
 
 VAE_PATH = './VAE/model/vae-test'
+
+
 def load_vae_model():
     loaded = torch.load(VAE_PATH, map_location=torch.device('cpu'))
     model = loaded['model']
     return model
-
-
-object_name_dict = {
-    0: 'Whiteboard',
-    1: 'Projector Screen',
-    2: 'Chippendale Table (2x3)',
-    3: 'TV (Flatscreen)',
-    4: 'Bookshelf (2x4)',
-    5: 'Potted Plant (Spikey)',
-    6: 'Mod Chair',
-    7: 'Captain’s Chair',
-    8: 'Chair (Simple)',
-    9: 'Chippendale Table (3x3)',
-    10: 'Bookshelf [Tall] (1x2)',
-    11: 'Laptop',
-    12: 'Microphone',
-    13: 'Lucky Bamboo',
-    14: 'Dining Chair (Square)'
-}
 
 
 def tensor_to_json(sample, threshold):
