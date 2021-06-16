@@ -7,10 +7,10 @@ app = Flask(__name__)
 
 @app.route('/generator/vae', methods=['GET'])
 def getVAE():
-    model = load_vae_model()
-    z = torch.randn(1, 4)
+    model, z_dim, threshold = load_vae_model()
+    z = torch.randn(1, z_dim)
     sample = model.decoder(z)
-    output = tensor_to_json(sample, 0.1)
+    output = tensor_to_json(sample, threshold)
     output['time'] = time.time()
     return jsonify(output)
 

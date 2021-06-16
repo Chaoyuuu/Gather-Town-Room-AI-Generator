@@ -39,13 +39,15 @@ class VAE(nn.Module):
         return self.decoder(z), mu, log_var
 
 
-VAE_PATH = './VAE/model/vae-test'
+VAE_PATH = './VAE/model/simple-vae'
 
 
 def load_vae_model():
     loaded = torch.load(VAE_PATH, map_location=torch.device('cpu'))
     model = loaded['model']
-    return model
+    z_dim = loaded['z_dim']
+    threshold = loaded['threshold']
+    return model, z_dim, threshold
 
 
 def tensor_to_json(sample, threshold):
@@ -81,12 +83,11 @@ def encode_to_json(output_tensor, threshold):
                     max_index = depth
 
             if max_index != -1:
-                object = {
-                    "x": col,
-                    "y": row,
-                    "name": object_name_dict[max_index],
-                    "orientation": 0
-                }
+                object_name = object_name_dict[max_index]
+                orientation = 0
+                object = object_dict[object_name][orientation]
+                object["x"] = col
+                object["y"] = row
                 room_json["room"].append(object)
 
     return room_json
