@@ -40,9 +40,8 @@ class VAE(nn.Module):
         return self.decoder(z), mu, log_var
 
 
-VAE_PATH = './VAE/model/simple-vae'
-def load_vae_model():
-    loaded = torch.load(VAE_PATH, map_location=torch.device('cpu'))
+def load_vae_model(vae_model_path):
+    loaded = torch.load(vae_model_path, map_location=torch.device('cpu'))
     model = loaded['model']
     z_dim = loaded['z_dim']
     threshold = loaded['threshold']

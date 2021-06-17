@@ -16,14 +16,55 @@ def get_ga():
     return 'GET GA'
 
 
-@app.route('/generator/vae', methods=['GET'])
-def get_vae():
-    model, z_dim, threshold = load_vae_model()
+def generate_room_from_vae(model_path):
+    model, z_dim, threshold = load_vae_model(model_path)
     z = torch.randn(1, z_dim)
     sample = model.decoder(z)
     output = tensor_to_json(sample, threshold)
     output['time'] = time.time()
-    return jsonify(output)
+    return output
+
+
+@app.route('/generator/vae', methods=['GET'])
+def get_vae():
+    model_path = './VAE/model/simple-vae'
+    return generate_room_from_vae(model_path)
+
+
+@app.route('/generator/vae/table', methods=['GET'])
+def get_vae_table():
+    model_path = './VAE/model/personal/vae-table'
+    return generate_room_from_vae(model_path)
+
+
+@app.route('/generator/vae/room', methods=['GET'])
+def get_vae_room():
+    model_path = './VAE/model/vae-room'
+    return generate_room_from_vae(model_path)
+
+
+@app.route('/generator/vae/chao', methods=['GET'])
+def get_vae_chao():
+    model_path = './VAE/model/personal/vae-chaoyu'
+    return generate_room_from_vae(model_path)
+
+
+@app.route('/generator/vae/johnny', methods=['GET'])
+def get_vae_johnny():
+    model_path = './VAE/model/personal/vae-johnny'
+    return generate_room_from_vae(model_path)
+
+
+@app.route('/generator/vae/han', methods=['GET'])
+def get_vae_han():
+    model_path = './VAE/model/personal/vae-han'
+    return generate_room_from_vae(model_path)
+
+
+@app.route('/generator/vae/ning', methods=['GET'])
+def get_vae_ning():
+    model_path = './VAE/model/personal/vae-ning'
+    return generate_room_from_vae(model_path)
 
 
 if __name__ == "__main__":
