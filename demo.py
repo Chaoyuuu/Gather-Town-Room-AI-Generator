@@ -1,6 +1,8 @@
 import time
 from argparse import ArgumentParser
 from flask import Flask, jsonify
+
+from gan_model import *
 from vae_model import *
 
 app = Flask(__name__)
@@ -8,7 +10,16 @@ app = Flask(__name__)
 
 @app.route('/generator/gan', methods=['GET'])
 def get_gan():
-    return 'GET GAN'
+    myGen = Generator()
+    myGen.load_state_dict(torch.load("./GAN/saveG.pt"))
+
+    noise_fn = lambda x: torch.randn((x, 16))
+    latent_vec = noise_fn(1)
+    result_tensor = myGen(latent_vec)
+
+    output = tensor_to_json_gan(result_tensor[0])
+    output['time'] = time.time()
+    return jsonify(output)
 
 
 @app.route('/generator/ga', methods=['GET'])
