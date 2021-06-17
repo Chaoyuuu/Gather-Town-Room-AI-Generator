@@ -5,8 +5,19 @@ from vae_model import *
 
 app = Flask(__name__)
 
+
+@app.route('/generator/gan', methods=['GET'])
+def get_gan():
+    return 'GET GAN'
+
+
+@app.route('/generator/ga', methods=['GET'])
+def get_ga():
+    return 'GET GA'
+
+
 @app.route('/generator/vae', methods=['GET'])
-def getVAE():
+def get_vae():
     model, z_dim, threshold = load_vae_model()
     z = torch.randn(1, z_dim)
     sample = model.decoder(z)

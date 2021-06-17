@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import copy
 from object_dictionary import *
 
 
@@ -40,8 +41,6 @@ class VAE(nn.Module):
 
 
 VAE_PATH = './VAE/model/simple-vae'
-
-
 def load_vae_model():
     loaded = torch.load(VAE_PATH, map_location=torch.device('cpu'))
     model = loaded['model']
@@ -85,9 +84,12 @@ def encode_to_json(output_tensor, threshold):
             if max_index != -1:
                 object_name = object_name_dict[max_index]
                 orientation = 0
-                object = object_dict[object_name][orientation]
-                object["x"] = col
-                object["y"] = row
+                object = copy.deepcopy(object_dict[object_name][orientation])
+                if max_index == 9 or max_index == 2:
+                    row -= 1
+                    col -= 1
+                object["x"] = row
+                object["y"] = col
                 room_json["room"].append(object)
 
     return room_json
