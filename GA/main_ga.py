@@ -19,7 +19,7 @@ P = 0.0
 M_P1 = 0.5
 M_P2 = 0.2
 SURVIVE_PAIR = 1
-POP_SIZE = 10
+POP_SIZE = 100
 GEN_LIMIT = 30000
 WORK_SIZE = 30
 MIN_ITEMS = 10
@@ -28,7 +28,7 @@ MAX_ITEMS = 20
 WEIGHT_LIMIT = 20000
 # Constants (fitness2)
 SOME = 5
-GAN_BASELINE = 0.5
+GAN_BASELINE = 0.35
 DISS = Discriminator()
 
 # Mappings
