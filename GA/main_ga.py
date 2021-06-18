@@ -16,18 +16,18 @@ Population = List[RoomMap]
 W = 10
 H = 13
 P = 0.0
-M_P1 = 0.5
+M_P1 = 0.1
 M_P2 = 0.2
-SURVIVE_PAIR = 1
-POP_SIZE = 20
+SURVIVE_PAIR = 2
+POP_SIZE = 100
 GEN_LIMIT = 30000
-WORK_SIZE = 30
-MIN_ITEMS = 10
-MAX_ITEMS = 20
+WORK_SIZE = 100
+MIN_ITEMS = 15
+MAX_ITEMS = 30
 # Constants (fitness1)
 WEIGHT_LIMIT = 20000
 # Constants (fitness2)
-SOME = 2
+SOME = 4
 GAN_BASELINE = 0.4
 DISS = Discriminator()
 
@@ -340,8 +340,8 @@ if __name__ == '__main__':
     from GA.prepare_data.workspace import workspace_population, dict_from_roommap
 
     population, gens = run_ga(
-        # populate_func=partial(workspace_population, size=WORK_SIZE),
-        populate_func=partial(random_population, size=POP_SIZE, h=H, w=W, appear_prob=P),
+        populate_func=partial(workspace_population, size=WORK_SIZE),
+        # populate_func=partial(random_population, size=POP_SIZE, h=H, w=W, appear_prob=P),
         fitness_func=partial(fitness_GAN_DISS, DISS=construct_DISS()),
         selection_func=selection_by_fitness,
         crossover_func=crossover_y_divide_4,
