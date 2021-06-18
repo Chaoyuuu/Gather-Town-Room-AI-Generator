@@ -4,6 +4,7 @@ from flask import Flask, jsonify
 
 from gan_model import *
 from vae_model import *
+from GA.ga_rooms_output import ga_rooms
 
 app = Flask(__name__)
 
@@ -24,7 +25,8 @@ def get_gan():
 
 @app.route('/generator/ga', methods=['GET'])
 def get_ga():
-    return 'GET GA'
+    print(len(ga_rooms))
+    return jsonify(ga_rooms)
 
 
 def generate_room_from_vae(model_path):
@@ -44,14 +46,26 @@ def get_vae():
 
 @app.route('/generator/vae/table', methods=['GET'])
 def get_vae_table():
-    model_path = './VAE/model/personal/vae-table'
-    return generate_room_from_vae(model_path)
+    model_path = 'VAE/model/vae-room'
+    model, z_dim, threshold = load_vae_model(model_path)
+    z = torch.randn(1, z_dim)
+    sample = model.decoder(z)
+    output_tensor = tensor_to_json_special_size(sample, threshold, 8)
+    output = encode_to_json_special_size(output_tensor, threshold, 8)
+    output['time'] = time.time()
+    return output
 
 
 @app.route('/generator/vae/room', methods=['GET'])
 def get_vae_room():
-    model_path = './VAE/model/vae-room'
-    return generate_room_from_vae(model_path)
+    model_path = 'VAE/model/vae-table'
+    model, z_dim, threshold = load_vae_model(model_path)
+    z = torch.randn(1, z_dim)
+    sample = model.decoder(z)
+    output_tensor = tensor_to_json_special_size(sample, threshold, 11)
+    output = encode_to_json_special_size(output_tensor, threshold, 11)
+    output['time'] = time.time()
+    return output
 
 
 @app.route('/generator/vae/chao', methods=['GET'])

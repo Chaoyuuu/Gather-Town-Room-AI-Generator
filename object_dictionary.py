@@ -1,21 +1,3 @@
-object_name_dict = {
-    0: 'Whiteboard',
-    1: 'Projector Screen',
-    2: 'Chippendale Table (2x3)',
-    3: 'TV (Flatscreen)',
-    4: 'Bookshelf (2x4)',
-    5: 'Potted Plant (Spikey)',
-    6: 'Mod Chair',
-    7: 'Captain\'s Chair',
-    8: 'Chair (Simple)',
-    9: 'Chippendale Table (3x3)',
-    10: 'Bookshelf [Tall] (1x2)',
-    11: 'Laptop',
-    12: 'Microphone',
-    13: 'Lucky Bamboo',
-    14: 'Dining Chair (Square)'
-}
-
 object_abbrev_name_dict = {
     -1: '--',
     0: 'WB',
@@ -33,6 +15,45 @@ object_abbrev_name_dict = {
     12: 'MP',
     13: 'LB',
     14: 'DC'
+}
+
+object_name_dict_table = {
+    0: 'Chippendale Table (2x3)',
+    1: 'Chippendale Table (3x3)',
+    2: 'Mod Chair',
+    3: 'Captain’s Chair',
+    4: 'Laptop',
+    5: 'Microphone'
+}
+
+object_name_dict_room = {
+    0: 'Whiteboard',
+    1: 'Projector Screen',
+    2: 'TV (Flatscreen)',
+    3: 'Bookshelf (2x4)',
+    4: 'Bookshelf [Tall] (1x2)',
+    5: 'Potted Plant (Spikey)',
+    6: 'Lucky Bamboo',
+    7: 'Mod Chair',
+    8: 'Captain’s Chair'
+}
+
+object_name_dict = {
+    0: 'Whiteboard',
+    1: 'Projector Screen',
+    2: 'Chippendale Table (2x3)',
+    3: 'TV (Flatscreen)',
+    4: 'Bookshelf (2x4)',
+    5: 'Potted Plant (Spikey)',
+    6: 'Mod Chair',
+    7: 'Captain’s Chair',
+    8: 'Chair (Simple)',
+    9: 'Chippendale Table (3x3)',
+    10: 'Bookshelf [Tall] (1x2)',
+    11: 'Laptop',
+    12: 'Microphone',
+    13: 'Lucky Bamboo',
+    14: 'Dining Chair (Square)'
 }
 
 object_dict = {

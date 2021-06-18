@@ -67,6 +67,24 @@ def tensor_to_json(sample, threshold):
     return encode_to_json(output_tensor, threshold)
 
 
+def tensor_to_json_special_size(sample, threshold, size):
+    output_tensor = torch.zeros((size, 13, 10))
+
+    for k, batch in enumerate(sample):
+        i = 0
+        for depth in range(size):
+            for col in range(13):
+                for row in range(10):
+                    data = batch[i]
+                    i += 1
+                    if depth == size - 2 or depth == size - 1:
+                        output_tensor[depth][col][row] = data
+                    elif data >= threshold:
+                        output_tensor[depth][col][row] = data
+
+    return output_tensor
+
+
 def encode_to_json(output_tensor, threshold):
     room_json = {
         "generator": "vae",
@@ -86,6 +104,43 @@ def encode_to_json(output_tensor, threshold):
             if max_index != -1 and ignore_chair(max_index):
                 object_name = object_name_dict[max_index]
                 orientation = decode_orientation(max_index, output_tensor[15][row][col], output_tensor[16][row][col])
+                object = copy.deepcopy(object_dict[object_name][orientation])
+                object["x"] = shift_object(max_index, col, orientation)
+                object["y"] = row
+                room_json["room"].append(object)
+
+    return room_json
+
+
+
+def encode_to_json_special_size(output_tensor, threshold, size):
+    room_json = {
+        "generator": "vae",
+        "room": []
+    }
+
+    special_object_name_dict = {}
+    if size == 11:
+        special_object_name_dict = object_name_dict_room
+    elif size == 8:
+        special_object_name_dict = object_name_dict_table
+    else:
+        print("error")
+        return {}
+
+    for row in range(13):
+        for col in range(10):
+            max_value = 0
+            max_index = -1
+            for depth in range(size - 2):
+                data = output_tensor[depth][row][col]
+
+                if data >= threshold and max_value < data:
+                    max_index = depth
+
+            if max_index != -1:
+                object_name = special_object_name_dict[max_index]
+                orientation = decode_orientation(max_index, output_tensor[size - 2][row][col], output_tensor[size -1][row][col])
                 object = copy.deepcopy(object_dict[object_name][orientation])
                 object["x"] = shift_object(max_index, col, orientation)
                 object["y"] = row

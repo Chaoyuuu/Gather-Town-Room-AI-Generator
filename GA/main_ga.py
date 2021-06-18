@@ -335,15 +335,15 @@ if __name__ == '__main__':
 
     # Append to json
     json_list = []
-    if os.stat("output.json").st_size > 0:
-        with open("output.json", "r+") as f:
+    if os.stat("ga_rooms_output.py").st_size > 0:
+        with open("ga_rooms_output.py", "r+") as f:
             json_list = json.load(f)
             for room_map in population[:SOME]:
                 json_list.append(dict_from_roommap(room_map))
             # print(f"debug---json_list={json_list}")
             json.dump(json_list, f)
     else:
-        with open("output.json", "w") as f:
+        with open("ga_rooms_output.py", "w") as f:
             json_list = []
             for room_map in population[:SOME]:
                 json_list.append(dict_from_roommap(room_map))

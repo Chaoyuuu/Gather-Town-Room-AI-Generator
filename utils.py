@@ -33,7 +33,7 @@ def decode_orientation(object_index, x, y):
 
 def ignore_chair(index):
     if index == 8 or index == 14:
-        return True
+        return False
     return True
 
 
