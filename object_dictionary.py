@@ -16,6 +16,25 @@ object_name_dict = {
     14: 'Dining Chair (Square)'
 }
 
+object_abbrev_name_dict = {
+    -1: '--',
+    0: 'WB',
+    1: 'PR',
+    2: 'T2',
+    3: 'TV',
+    4: 'B4',
+    5: 'PP',
+    6: 'MB',
+    7: 'CC',
+    8: 'CS',
+    9: 'T3',
+    10: 'B2',
+    11: 'LP',
+    12: 'MP',
+    13: 'LB',
+    14: 'DC'
+}
+
 object_dict = {
     'Whiteboard': [
         {

@@ -2,8 +2,9 @@ from datetime import datetime
 from functools import partial
 from random import choice, choices, random, randint
 from typing import List, Tuple, ClassVar
-from pprint import pprint
+from object_dictionary import object_abbrev_name_dict
 from fitness.gan import Discriminator
+import json
 
 # Defining Type
 RoomCell = List[int]  # (0~14)=one-hot; (15,16)=direction.
@@ -23,6 +24,7 @@ WEIGHT_LIMIT = 20000
 # Constants (fitness2)
 SOME = 50
 GAN_BASELINE = 0.98
+DISS = Discriminator()
 
 # Mappings
 orientations = [
@@ -115,16 +117,16 @@ def random_population(size: int, h: int, w: int, appear_prob: float) -> Populati
 
 def pretty_print(room_map: RoomMap) -> None:
     for h in range(H):
+        arr = []
         for w in range(W):
-            print(itemname_from_id[id_from_onehot(room_map[h][w])], end=" ")
-        print("")
+            arr.append(object_abbrev_name_dict[id_from_onehot(room_map[h][w])])
+        print(arr)
 
 
 # GA functions
 def construct_DISS() -> ClassVar[Discriminator]:
     import torch
     print("Initializing GAN discriminator...")
-    DISS = Discriminator()
     DISS.load_state_dict(torch.load("./fitness/save.pt"))
     DISS.eval()
     return DISS
@@ -133,6 +135,7 @@ def construct_DISS() -> ClassVar[Discriminator]:
 def fitness_GAN_DISS(room_map: RoomMap, DISS: ClassVar[Discriminator]) -> int:
     import numpy as np
     import torch
+    # Transpose dimension from (13, 10, 17) to (17, 13, 10).
     np_room_map = np.array(room_map, dtype="float32").transpose((2, 0, 1))
     torch_room_map = torch.from_numpy(np_room_map.reshape([1, *np_room_map.shape]))
     # pick [0] from the result array, which is of [0]-th input data.
@@ -149,67 +152,71 @@ def selection_by_fitness(population: Population, fitness_func) -> Population:
 
 def crossover_xy_divide_2(a: RoomMap, b: RoomMap) -> Tuple[RoomMap, RoomMap]:
     if len(a) != len(b) or len(a[0]) != len(b[0]):
-        raise ValueError("RoomMap should have the same (w, h)")
-    new_a = a
-    new_b = b
-    new_a[:H//2], new_b[:H//2] = new_b[:H//2], new_a[:H//2]
+        raise ValueError("RoomMap should have the same (h, w)")
+    a[:H//2], b[:H//2] = b[H//2], a[:H//2]
     for i in range(H):
-        new_a[i][W // 2:], new_b[i][W // 2:] = new_b[i][W // 2:], new_a[i][W // 2:]
-    return new_a, new_b
+        a[i][W//2:], b[i][W//2:] = b[i][W//2:], a[i][W//2:]
+    return a, b
 
 
 def crossover_y_divide_4(a: RoomMap, b: RoomMap) -> Tuple[RoomMap, RoomMap]:
     if len(a) != len(b) or len(a[0]) != len(b[0]):
-        raise ValueError("RoomMap should have the same (w, h)")
-    from fitness.heu import is_types
-    new_a = a
-    new_b = b
-    # 橫切四互換, 內外換: 留(1,3), 換(2,4)
-    new_a[:H//4], new_b[:H//4] = new_b[:H//4], new_a[:H//4]
-    new_a[H//2:H//2+H//4], new_b[H//2:H//2+H//4] = new_b[H//2:H//2+H//4], new_a[H//2:H//2+H//4]
+        raise ValueError("RoomMap should have the same (h, w)")
+    # 橫切四互換, 內外換: 換(2,4)
+    a[H//4:H//2], b[H//4:H//2] = b[H//4:H//2], a[H//4:H//2]
+    a[3*H//4:], b[3*H//4:] = b[3*H//4:], a[3*H//4:]
 
-    # 椅子換整組
-    for h in range(H):
-        for w in range(W):
-            # for new_a
-            if is_types(new_a[h][w], [id_from_itemname["Chair (Simple)"]]):
-                new_a[h][w] = one_hot_by_id(id_from_itemname["Dining Chair (Square)"])
-            elif is_types(new_a[h][w], [id_from_itemname["Chair (Simple)"]]):
-                new_a[h][w] = one_hot_by_id(id_from_itemname["Dining Chair (Square)"])
-            # for new_b
-            if is_types(new_b[h][w], [id_from_itemname["Chair (Simple)"]]):
-                new_b[h][w] = one_hot_by_id(id_from_itemname["Dining Chair (Square)"])
-            elif is_types(new_a[h][w], [id_from_itemname["Chair (Simple)"]]):
-                new_b[h][w] = one_hot_by_id(id_from_itemname["Dining Chair (Square)"])
-
-    return new_a, new_b
+    return a, b
 
 
-def mutation(room_map: RoomMap, prob: float) -> None:
-    from fitness.heu import is_types
+def mutation_random_add(room_map: RoomMap, prob: float) -> None:
     if random() >= prob:
         return
-    ri = randint(0, H - 1)
-    rj = randint(0, W - 1)
-    # TODO: This heuristic might not be needed.
-    if is_types(room_map[ri][rj], [-1]):
-        room_map[ri][rj] = one_hot_mapitem(1)
+    rh = randint(0, H - 1)
+    rw = randint(0, W - 1)
+    room_map[rh][rw] = one_hot_mapitem(appear_prob=1)
 
 
 def mutation_y_shift(room_map: RoomMap, prob: float) -> None:
     from fitness.heu import is_types
     if random() >= prob:
         return
-    # y-shift
-    offset = choice([-1, 1])
-    for h in range(H//4, H//4+H//2):
+
+    # y-shift - division 1 move down
+    w_offset = choice([-1, 1])
+    for h in range(H//2-1, H//4-1, -1):
         for w in range(W):
             if not is_types(room_map[h][w], [-1]):
-                arr = [0]*count_all_furniture()
-                arr[randint(0, count_all_furniture()-1)] = 1
-                arr.extend(choice(orientations))
-                room_map[h+offset][w] = arr
+                room_map[h+1][(w+w_offset) % W] = room_map[h][w][:]
                 room_map[h][w] = one_hot_by_id(-1)
+
+    # y-shift 2 - division 2 move up
+    w_offset = choice([-1, 1])
+    for h in range(H//2+1, 3*H//4):
+        for w in range(W):
+            if not is_types(room_map[h][w], [-1]):
+                room_map[h-1][(w+w_offset) % W] = room_map[h][w][:]
+                room_map[h][w] = one_hot_by_id(-1)
+
+    # y-shift 3 - randomly move middle up/down
+    for w, tile in enumerate(room_map[H//2]):
+        h_offset = choice([-1, 1])
+        if random() < 0.5 and not is_types(tile, [-1]):
+            room_map[H//2+h_offset][w] = room_map[H//2][w][:]
+            room_map[H//2][w] = one_hot_by_id(-1)
+
+
+def mutation_chairset_swap(room_map: RoomMap, prob: float) -> None:
+    from GA.fitness.heu import is_types
+    if random() >= prob:
+        return
+    # 椅子換整組
+    for h in range(H):
+        for w in range(W):
+            if is_types(room_map[h][w], [id_from_itemname["Chair (Simple)"]]):
+                room_map[h][w] = one_hot_by_id(id_from_itemname["Dining Chair (Square)"])
+            elif is_types(room_map[h][w], [id_from_itemname["Dining Chair (Square)"]]):
+                room_map[h][w] = one_hot_by_id(id_from_itemname["Chair (Simple)"])
 
 
 def run_ga(
@@ -225,32 +232,33 @@ def run_ga(
                         key=lambda room_map: fitness_func(room_map),
                         reverse=True)
 
-    i = 0
-    for i in range(generation_limit):
-        print(f"GEN={i + 1}, len(population)={len(population)}")
+    i = 1
+    while i <= generation_limit:
+        i += 1
+        print(f"GEN={i}, len(population)={len(population)}")
 
         print(f"\tDISS={fitness_func(population[0])}, room={pretty_print(population[0])}")
         if some_pass_by_fitness(SOME, population, fitness_func):
             print(f"Top {SOME} of population has passed GAN baseline={GAN_BASELINE}, finished!")
             break
 
-        next_generation = population[:2]  # pick elites first
+        next_generation = population[:2]  # pick 2 elites first
 
         for j in range(len(population)//2 - 1):
             parents = selection_func(population, fitness_func)
-            c1, c2 = crossover_func(parents[0], parents[1])
-            mutation_func1(c1)
-            mutation_func1(c2)
-            mutation_func2(c2)
-            mutation_func2(c2)
-            next_generation.extend([c1, c2])
+            for child in crossover_func(parents[0], parents[1]):
+                mutation_func1(child)
+                mutation_func1(child)
+                mutation_func2(child)
+                mutation_func2(child)
+                next_generation.append(child)
 
         # Sort population by GAN DISS's value in descending order.
         population = sorted(next_generation,
                             key=lambda room_map: fitness_func(room_map),
                             reverse=True)
 
-    return population, i
+    return population, i-1
 
 
 def some_pass_by_fitness(some: int, population: Population, fitness_func) -> bool:
@@ -267,20 +275,22 @@ if __name__ == '__main__':
         fitness_func=partial(fitness_GAN_DISS, DISS=construct_DISS()),
         selection_func=selection_by_fitness,
         crossover_func=crossover_y_divide_4,
-        mutation_func1= partial(mutation, prob=M_P1),
+        mutation_func1= partial(mutation_random_add, prob=M_P1),
         mutation_func2=partial(mutation_y_shift, prob=M_P2),
         generation_limit=GEN_LIMIT
     )
 
     print(f"------------generation------------:\n{gens}")
-    pprint(f"------------best population------------:\n")
+    print(f"------------best population------------:\n")
     pretty_print(population[0])
 
     with open('ga_store.txt', 'a') as f:
         for room_map in population[:6]:
             for h in range(H):
+                arr = []
                 for w in range(W):
-                    f.write(itemname_from_id[id_from_onehot(room_map[h][w])])
-                f.write('\n')
-            f.write('---\n')
+                    arr.append(object_abbrev_name_dict[id_from_onehot(room_map[h][w])])
+                f.write(json.dumps(arr))
+            f.write(f'  DISS={fitness_GAN_DISS(room_map, DISS)}\n')
+            f.write(f'------\n')
         f.write(f'^^^-------{datetime.now().strftime("%d/%m/%Y %H:%M:%S")}-------^^^\n')
