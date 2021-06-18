@@ -199,7 +199,7 @@ object_dict = {
             "x": 0
         }
     ],
-    'Captain’s Chair': [
+    "Captain's Chair": [
         {
             "orientation": 0,
             "normal": "https://cdn.gather.town/v0/b/gather-town.appspot.com/o/internal-dashboard-upload%2FJvG4G1EbH8X6pZeF?alt=media&token=e9412e42-76f1-47be-9f6e-f9628565ec2c",
