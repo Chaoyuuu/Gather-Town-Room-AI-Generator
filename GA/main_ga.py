@@ -18,16 +18,17 @@ H = 13
 P = 0.0
 M_P1 = 0.5
 M_P2 = 0.2
-POP_SIZE = 10
+SURVIVE_PAIR = 1
+POP_SIZE = 30
 GEN_LIMIT = 30000
-WORK_SIZE = 60
-MIN_ITEMS = 20
-MAX_ITEMS = 30
+WORK_SIZE = 30
+MIN_ITEMS = 10
+MAX_ITEMS = 20
 # Constants (fitness1)
 WEIGHT_LIMIT = 20000
 # Constants (fitness2)
-SOME = 2
-GAN_BASELINE = 0.2
+SOME = 5
+GAN_BASELINE = 0.4
 DISS = Discriminator()
 
 # Mappings
@@ -46,7 +47,7 @@ itemname_from_id = {
     4: "Bookshelf (2x4)",
     5: "Potted Plant (Spikey)",
     6: "Mod Chair",
-    7: "Captain\"s Chair",
+    7: "Captain's Chair",
     8: "Chair (Simple)",
     9: "Chippendale Table (3x3)",
     10: "Bookshelf [Tall] (1x2)",
@@ -266,9 +267,9 @@ def run_ga(
 
         # if fitness_func(population[0]) > GAN_BASELINE:
 
-        next_generation = population[:2]  # pick 2 elites first
+        next_generation = population[:2*SURVIVE_PAIR]  # pick 2 elites first
 
-        for j in range(len(population)//2 - 1):
+        for j in range(len(population)//2 - SURVIVE_PAIR):
             parents = selection_func(population, fitness_func)
             for child in crossover_func(parents[0], parents[1]):
                 mutation_func1(child)
@@ -318,6 +319,9 @@ if __name__ == '__main__':
     )
 
     print(f"------------generation------------:\n{gens}")
+    for i in range(10):
+        pretty_print(population[i])
+        print("---")
     print(f"------------best population------------:\n")
     pretty_print(population[0])
 
