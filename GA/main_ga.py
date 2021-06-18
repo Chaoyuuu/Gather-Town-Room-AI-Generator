@@ -338,19 +338,14 @@ if __name__ == '__main__':
         f_in.write(f'^^^-------{datetime.now().strftime("%d/%m/%Y %H:%M:%S")}-------^^^\n')
 
     # Append to json
-    json_list = []
-    if os.stat("output.json").st_size > 0:
-        with open("output.json", "r+") as f:
+    with open("output.json", "r+") as f:
+        json_list = []
+        if os.stat("output.json").st_size > 0:
             json_list = json.load(f)
-            for room_map in population[:SOME]:
-                json_list.append(dict_from_roommap(room_map))
-            # print(f"debug---json_list={json_list}")
-            json.dump(json_list, f)
-    else:
-        with open("output.json", "w") as f:
-            json_list = []
-            for room_map in population[:SOME]:
-                json_list.append(dict_from_roommap(room_map))
-            # print(f"debug2---json_list={json_list}")
-            json.dump(json_list, f)
+        for room_map in population[:SOME]:
+            json_list.append(dict_from_roommap(room_map))
+        # print(f"debug---json_list={json_list}")
+        f.seek(0)
+        json.dump(json_list, f)
+        f.truncate()
 
