@@ -312,7 +312,7 @@ if __name__ == '__main__':
         populate_func=partial(random_population, size=POP_SIZE, h=H, w=W, appear_prob=P),
         fitness_func=partial(fitness_GAN_DISS, DISS=construct_DISS()),
         selection_func=selection_by_fitness,
-        crossover_func=crossover_xy_divide_2,
+        crossover_func=crossover_y_divide_4,
         mutation_func1=partial(mutation_random_add, prob=M_P1),
         mutation_func2=partial(mutation_y_shift, prob=M_P2),
         generation_limit=GEN_LIMIT
