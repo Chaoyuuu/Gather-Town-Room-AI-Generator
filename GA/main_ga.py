@@ -19,7 +19,7 @@ P = 0.0
 M_P1 = 0.5
 M_P2 = 0.2
 SURVIVE_PAIR = 1
-POP_SIZE = 100
+POP_SIZE = 20
 GEN_LIMIT = 30000
 WORK_SIZE = 30
 MIN_ITEMS = 10
@@ -27,8 +27,8 @@ MAX_ITEMS = 20
 # Constants (fitness1)
 WEIGHT_LIMIT = 20000
 # Constants (fitness2)
-SOME = 5
-GAN_BASELINE = 0.35
+SOME = 2
+GAN_BASELINE = 0.4
 DISS = Discriminator()
 
 # Mappings
@@ -255,7 +255,8 @@ def run_ga(
         crossover_func,
         mutation_func1,
         mutation_func2,
-        generation_limit: int) -> Tuple[Population, int]:
+        generation_limit: int,
+        population_size: int) -> Tuple[Population, int]:
     # Prepare initial data.
     population = sorted(populate_func(),
                         key=lambda room_map: fitness_func(room_map),
@@ -263,6 +264,10 @@ def run_ga(
 
     i = 1
     while i <= generation_limit:
+        population = make_unique(population)
+        if len(population) < population_size:
+            population.extend(random_population(population_size-len(population), H, W, appear_prob=0.2))
+
         print(f"GEN={i}, len(population)={len(population)}")
 
         # if fitness_func(population[0]) > GAN_BASELINE:
@@ -282,6 +287,10 @@ def run_ga(
                         break
                 mutation_func2(child)
                 next_generation.append(child)
+
+        next_generation = make_unique(next_generation)
+        if len(next_generation) < population_size:
+            next_generation.extend(random_population(population_size - len(next_generation), H, W, appear_prob=0.2))
 
         print(f"\tDISS={fitness_func(next_generation[0])}")
         pretty_print(next_generation[0])
@@ -305,6 +314,28 @@ def some_pass_by_fitness(some: int, population: Population, fitness_func) -> boo
     return True
 
 
+def make_unique(population: Population) -> Population:
+    unique_population = []
+    for room_map in population:
+        found_the_same = False
+        for u_map in unique_population:
+            if check_the_same(room_map, u_map):
+                found_the_same = True
+                break
+        if not found_the_same:
+            unique_population.append(room_map)
+    return unique_population
+
+
+def check_the_same(a: RoomMap, b: RoomMap) -> bool:
+    for h in range(H):
+        for w in range(W):
+            for i in range(17):
+                if a[h][w][i] != b[h][w][i]:
+                    return False
+    return True
+
+
 if __name__ == '__main__':
     from GA.prepare_data.workspace import workspace_population, dict_from_roommap
 
@@ -316,7 +347,8 @@ if __name__ == '__main__':
         crossover_func=crossover_y_divide_4,
         mutation_func1=partial(mutation_random_add, prob=M_P1),
         mutation_func2=partial(mutation_y_shift, prob=M_P2),
-        generation_limit=GEN_LIMIT
+        generation_limit=GEN_LIMIT,
+        population_size=POP_SIZE
     )
 
     print(f"------------generation------------:\n{gens}")

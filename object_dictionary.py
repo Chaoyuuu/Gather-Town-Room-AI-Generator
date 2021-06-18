@@ -21,7 +21,7 @@ object_name_dict_table = {
     0: 'Chippendale Table (2x3)',
     1: 'Chippendale Table (3x3)',
     2: 'Mod Chair',
-    3: 'Captain’s Chair',
+    3: 'Captain\'s Chair',
     4: 'Laptop',
     5: 'Microphone'
 }
@@ -35,7 +35,7 @@ object_name_dict_room = {
     5: 'Potted Plant (Spikey)',
     6: 'Lucky Bamboo',
     7: 'Mod Chair',
-    8: 'Captain’s Chair'
+    8: 'Captain\'s Chair'
 }
 
 object_name_dict = {
@@ -46,7 +46,7 @@ object_name_dict = {
     4: 'Bookshelf (2x4)',
     5: 'Potted Plant (Spikey)',
     6: 'Mod Chair',
-    7: 'Captain’s Chair',
+    7: 'Captain\'s Chair',
     8: 'Chair (Simple)',
     9: 'Chippendale Table (3x3)',
     10: 'Bookshelf [Tall] (1x2)',
@@ -199,7 +199,7 @@ object_dict = {
             "x": 0
         }
     ],
-    "Captain’s Chair": [
+    "Captain's Chair": [
         {
             "orientation": 0,
             "normal": "https://cdn.gather.town/v0/b/gather-town.appspot.com/o/internal-dashboard-upload%2FJvG4G1EbH8X6pZeF?alt=media&token=e9412e42-76f1-47be-9f6e-f9628565ec2c",
