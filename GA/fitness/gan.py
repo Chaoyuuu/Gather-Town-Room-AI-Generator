@@ -23,7 +23,7 @@ class Discriminator(nn.Module):
             bias=False)
         # 7X6
         self.leaky_relu = nn.LeakyReLU()
-        self.dropout_2d = nn.Dropout2d(0.3)
+        self.dropout_2d = nn.Dropout2d(0.2)
 
         self.conv2 = nn.Conv2d(
             in_channels=68,

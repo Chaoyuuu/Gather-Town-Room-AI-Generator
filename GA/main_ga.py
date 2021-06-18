@@ -14,16 +14,19 @@ Population = List[RoomMap]
 # Constants (Common)
 W = 10
 H = 13
-P = 0.4
-M_P1 = 0.05
-M_P2 = 0.1
-POP_SIZE = 60
+P = 0.0
+M_P1 = 0.5
+M_P2 = 0.2
+POP_SIZE = 10
 GEN_LIMIT = 30000
+WORK_SIZE = 60
+MIN_ITEMS = 20
+MAX_ITEMS = 30
 # Constants (fitness1)
 WEIGHT_LIMIT = 20000
 # Constants (fitness2)
-SOME = 50
-GAN_BASELINE = 0.98
+SOME = 2
+GAN_BASELINE = 0.38
 DISS = Discriminator()
 
 # Mappings
@@ -127,19 +130,31 @@ def pretty_print(room_map: RoomMap) -> None:
 def construct_DISS() -> ClassVar[Discriminator]:
     import torch
     print("Initializing GAN discriminator...")
-    DISS.load_state_dict(torch.load("./fitness/save.pt"))
+    DISS.load_state_dict(torch.load("../GAN/saveD.pt"))
     DISS.eval()
     return DISS
 
 
-def fitness_GAN_DISS(room_map: RoomMap, DISS: ClassVar[Discriminator]) -> int:
+def fitness_GAN_DISS(room_map: RoomMap, DISS: ClassVar[Discriminator]) -> float:
     import numpy as np
     import torch
     # Transpose dimension from (13, 10, 17) to (17, 13, 10).
+    if count_room_map_items(room_map) == 0:
+        return 0.2
     np_room_map = np.array(room_map, dtype="float32").transpose((2, 0, 1))
     torch_room_map = torch.from_numpy(np_room_map.reshape([1, *np_room_map.shape]))
     # pick [0] from the result array, which is of [0]-th input data.
     return DISS.forward(torch_room_map)[0][0]
+
+
+def count_room_map_items(room_map: RoomMap) -> int:
+    from GA.fitness.heu import is_types
+    count = 0
+    for h in range(H):
+        for w in range(W):
+            if not is_types(room_map[h][w], [-1]):
+                count += 1
+    return count
 
 
 def selection_by_fitness(population: Population, fitness_func) -> Population:
@@ -153,9 +168,15 @@ def selection_by_fitness(population: Population, fitness_func) -> Population:
 def crossover_xy_divide_2(a: RoomMap, b: RoomMap) -> Tuple[RoomMap, RoomMap]:
     if len(a) != len(b) or len(a[0]) != len(b[0]):
         raise ValueError("RoomMap should have the same (h, w)")
-    a[:H//2], b[:H//2] = b[H//2], a[:H//2]
-    for i in range(H):
-        a[i][W//2:], b[i][W//2:] = b[i][W//2:], a[i][W//2:]
+
+    for h in range(H//2):
+        for w in range(W):
+            a[h][w], b[h][w] = b[h][w], a[h][w]
+
+    for h in range(H):
+        for w in range(W//2):
+            a[h][w], b[h][w] = b[h][w], a[h][w]
+
     return a, b
 
 
@@ -163,18 +184,26 @@ def crossover_y_divide_4(a: RoomMap, b: RoomMap) -> Tuple[RoomMap, RoomMap]:
     if len(a) != len(b) or len(a[0]) != len(b[0]):
         raise ValueError("RoomMap should have the same (h, w)")
     # 橫切四互換, 內外換: 換(2,4)
-    a[H//4:H//2], b[H//4:H//2] = b[H//4:H//2], a[H//4:H//2]
-    a[3*H//4:], b[3*H//4:] = b[3*H//4:], a[3*H//4:]
+    for h in range(H//4, H//2):
+        for w in range(W):
+            a[h][w], b[h][w] = b[h][w], a[h][w]
+
+    for h in range(3*H//4, H):
+        for w in range(W):
+            a[h][w], b[h][w] = b[h][w], a[h][w]
 
     return a, b
 
 
-def mutation_random_add(room_map: RoomMap, prob: float) -> None:
+def mutation_random_add(room_map: RoomMap, prob: float, remove: bool = False) -> None:
     if random() >= prob:
         return
     rh = randint(0, H - 1)
     rw = randint(0, W - 1)
-    room_map[rh][rw] = one_hot_mapitem(appear_prob=1)
+    if remove:
+        room_map[rh][rw] = one_hot_by_id(-1)
+    else:
+        room_map[rh][rw] = one_hot_mapitem(appear_prob=1)
 
 
 def mutation_y_shift(room_map: RoomMap, prob: float) -> None:
@@ -183,26 +212,24 @@ def mutation_y_shift(room_map: RoomMap, prob: float) -> None:
         return
 
     # y-shift - division 1 move down
-    w_offset = choice([-1, 1])
     for h in range(H//2-1, H//4-1, -1):
         for w in range(W):
             if not is_types(room_map[h][w], [-1]):
-                room_map[h+1][(w+w_offset) % W] = room_map[h][w][:]
+                room_map[h+1][w] = room_map[h][w]
                 room_map[h][w] = one_hot_by_id(-1)
 
     # y-shift 2 - division 2 move up
-    w_offset = choice([-1, 1])
     for h in range(H//2+1, 3*H//4):
         for w in range(W):
             if not is_types(room_map[h][w], [-1]):
-                room_map[h-1][(w+w_offset) % W] = room_map[h][w][:]
+                room_map[h-1][w] = room_map[h][w]
                 room_map[h][w] = one_hot_by_id(-1)
 
     # y-shift 3 - randomly move middle up/down
     for w, tile in enumerate(room_map[H//2]):
         h_offset = choice([-1, 1])
         if random() < 0.5 and not is_types(tile, [-1]):
-            room_map[H//2+h_offset][w] = room_map[H//2][w][:]
+            room_map[H//2+h_offset][w] = room_map[H//2][w]
             room_map[H//2][w] = one_hot_by_id(-1)
 
 
@@ -234,13 +261,9 @@ def run_ga(
 
     i = 1
     while i <= generation_limit:
-        i += 1
         print(f"GEN={i}, len(population)={len(population)}")
 
-        print(f"\tDISS={fitness_func(population[0])}, room={pretty_print(population[0])}")
-        if some_pass_by_fitness(SOME, population, fitness_func):
-            print(f"Top {SOME} of population has passed GAN baseline={GAN_BASELINE}, finished!")
-            break
+        # if fitness_func(population[0]) > GAN_BASELINE:
 
         next_generation = population[:2]  # pick 2 elites first
 
@@ -248,10 +271,20 @@ def run_ga(
             parents = selection_func(population, fitness_func)
             for child in crossover_func(parents[0], parents[1]):
                 mutation_func1(child)
-                mutation_func1(child)
-                mutation_func2(child)
+                while True:
+                    if count_room_map_items(child) < MIN_ITEMS:
+                        mutation_func1(child)
+                    elif count_room_map_items(child) > MAX_ITEMS:
+                        mutation_func1(child, remove=True)
+                    else:
+                        break
                 mutation_func2(child)
                 next_generation.append(child)
+
+        print(f"\tDISS={fitness_func(next_generation[0])}, room={pretty_print(next_generation[0])}")
+        if some_pass_by_fitness(SOME, next_generation, fitness_func):
+            print(f"Top {SOME} of population has passed GAN baseline={GAN_BASELINE}, finished!")
+            break
 
         # Sort population by GAN DISS's value in descending order.
         population = sorted(next_generation,
@@ -269,13 +302,14 @@ def some_pass_by_fitness(some: int, population: Population, fitness_func) -> boo
 
 
 if __name__ == '__main__':
-
+    from GA.prepare_data.workspace import workspace_population
     population, gens = run_ga(
+        # populate_func=partial(workspace_population, size=WORK_SIZE),
         populate_func=partial(random_population, size=POP_SIZE, h=H, w=W, appear_prob=P),
         fitness_func=partial(fitness_GAN_DISS, DISS=construct_DISS()),
         selection_func=selection_by_fitness,
-        crossover_func=crossover_y_divide_4,
-        mutation_func1= partial(mutation_random_add, prob=M_P1),
+        crossover_func=crossover_xy_divide_2,
+        mutation_func1=partial(mutation_random_add, prob=M_P1),
         mutation_func2=partial(mutation_y_shift, prob=M_P2),
         generation_limit=GEN_LIMIT
     )
