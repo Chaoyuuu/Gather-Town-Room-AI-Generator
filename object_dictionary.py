@@ -6,7 +6,7 @@ object_name_dict = {
     4: 'Bookshelf (2x4)',
     5: 'Potted Plant (Spikey)',
     6: 'Mod Chair',
-    7: 'Captain’s Chair',
+    7: 'Captain\'s Chair',
     8: 'Chair (Simple)',
     9: 'Chippendale Table (3x3)',
     10: 'Bookshelf [Tall] (1x2)',

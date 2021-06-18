@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from functools import partial
 from random import choice, choices, random, randint
@@ -26,7 +27,7 @@ MAX_ITEMS = 30
 WEIGHT_LIMIT = 20000
 # Constants (fitness2)
 SOME = 2
-GAN_BASELINE = 0.38
+GAN_BASELINE = 0.2
 DISS = Discriminator()
 
 # Mappings
@@ -290,6 +291,7 @@ def run_ga(
         population = sorted(next_generation,
                             key=lambda room_map: fitness_func(room_map),
                             reverse=True)
+        i+=1
 
     return population, i-1
 
@@ -302,7 +304,8 @@ def some_pass_by_fitness(some: int, population: Population, fitness_func) -> boo
 
 
 if __name__ == '__main__':
-    from GA.prepare_data.workspace import workspace_population
+    from GA.prepare_data.workspace import workspace_population, dict_from_roommap
+
     population, gens = run_ga(
         # populate_func=partial(workspace_population, size=WORK_SIZE),
         populate_func=partial(random_population, size=POP_SIZE, h=H, w=W, appear_prob=P),
@@ -318,13 +321,32 @@ if __name__ == '__main__':
     print(f"------------best population------------:\n")
     pretty_print(population[0])
 
-    with open('ga_store.txt', 'a') as f:
+    # Append to file
+    with open('ga_store.txt', 'a') as f_in:
         for room_map in population[:6]:
             for h in range(H):
                 arr = []
                 for w in range(W):
                     arr.append(object_abbrev_name_dict[id_from_onehot(room_map[h][w])])
-                f.write(json.dumps(arr))
-            f.write(f'  DISS={fitness_GAN_DISS(room_map, DISS)}\n')
-            f.write(f'------\n')
-        f.write(f'^^^-------{datetime.now().strftime("%d/%m/%Y %H:%M:%S")}-------^^^\n')
+                f_in.write(json.dumps(arr))
+            f_in.write(f'  DISS={fitness_GAN_DISS(room_map, DISS)}\n')
+            f_in.write(f'------\n')
+        f_in.write(f'^^^-------{datetime.now().strftime("%d/%m/%Y %H:%M:%S")}-------^^^\n')
+
+    # Append to json
+    json_list = []
+    if os.stat("output.json").st_size > 0:
+        with open("output.json", "r+") as f:
+            json_list = json.load(f)
+            for room_map in population[:SOME]:
+                json_list.append(dict_from_roommap(room_map))
+            # print(f"debug---json_list={json_list}")
+            json.dump(json_list, f)
+    else:
+        with open("output.json", "w") as f:
+            json_list = []
+            for room_map in population[:SOME]:
+                json_list.append(dict_from_roommap(room_map))
+            # print(f"debug2---json_list={json_list}")
+            json.dump(json_list, f)
+
