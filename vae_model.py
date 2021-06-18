@@ -112,14 +112,13 @@ def encode_to_json(output_tensor, threshold):
     return room_json
 
 
-
 def encode_to_json_special_size(output_tensor, threshold, size):
     room_json = {
         "generator": "vae",
         "room": []
     }
 
-    special_object_name_dict = {}
+    special_object_name_dict = object_name_dict_room
     if size == 11:
         special_object_name_dict = object_name_dict_room
     elif size == 8:
@@ -127,6 +126,7 @@ def encode_to_json_special_size(output_tensor, threshold, size):
     else:
         print("error")
         return {}
+
 
     for row in range(13):
         for col in range(10):
@@ -140,7 +140,8 @@ def encode_to_json_special_size(output_tensor, threshold, size):
 
             if max_index != -1:
                 object_name = special_object_name_dict[max_index]
-                orientation = decode_orientation(max_index, output_tensor[size - 2][row][col], output_tensor[size -1][row][col])
+                orientation = decode_orientation(max_index, output_tensor[size - 2][row][col],
+                                                 output_tensor[size - 1][row][col])
                 object = copy.deepcopy(object_dict[object_name][orientation])
                 object["x"] = shift_object(max_index, col, orientation)
                 object["y"] = row

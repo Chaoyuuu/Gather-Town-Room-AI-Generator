@@ -8,6 +8,7 @@ from GA.ga_rooms_output import ga_rooms
 
 app = Flask(__name__)
 
+ga_counter = 0
 
 @app.route('/generator/gan', methods=['GET'])
 def get_gan():
@@ -25,8 +26,10 @@ def get_gan():
 
 @app.route('/generator/ga', methods=['GET'])
 def get_ga():
-    print(len(ga_rooms))
-    return jsonify(ga_rooms)
+    global ga_counter
+    ga_counter = (ga_counter + 1) % 5
+    print(ga_counter)
+    return jsonify(ga_rooms[ga_counter])
 
 
 def generate_room_from_vae(model_path):
@@ -46,7 +49,7 @@ def get_vae():
 
 @app.route('/generator/vae/table', methods=['GET'])
 def get_vae_table():
-    model_path = 'VAE/model/vae-room'
+    model_path = 'VAE/model/vae-table'
     model, z_dim, threshold = load_vae_model(model_path)
     z = torch.randn(1, z_dim)
     sample = model.decoder(z)
@@ -58,7 +61,7 @@ def get_vae_table():
 
 @app.route('/generator/vae/room', methods=['GET'])
 def get_vae_room():
-    model_path = 'VAE/model/vae-table'
+    model_path = 'VAE/model/vae-room'
     model, z_dim, threshold = load_vae_model(model_path)
     z = torch.randn(1, z_dim)
     sample = model.decoder(z)
